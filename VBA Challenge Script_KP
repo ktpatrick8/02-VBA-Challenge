@@ -1,0 +1,99 @@
+'Move through sheets
+Sub stocksheets()
+    For Each ws In Worksheets
+    ws.Activate
+    Call stocktracker
+    Next ws
+End Sub
+
+Sub stocktracker()
+
+  ' Set a variable to hold stock ticker name
+  Dim stock_ticker As String
+
+  ' Set to hold total volume
+  Dim total_volume As Double
+  total_volume = 0
+
+  lastRow = Cells(Rows.count, 1).End(xlUp).Row
+  
+  ' Keep track of the location forthe summary table
+  Dim Summary_Table_Row As Integer
+  Summary_Table_Row = 2
+  
+  'prints headers for summary table
+  Range("I" & Summary_Table_Row - 1).Value = "Ticker"
+  Range("J" & Summary_Table_Row - 1).Value = "Yearly Change"
+  Range("K" & Summary_Table_Row - 1).Value = "Percent Change"
+  Range("L" & Summary_Table_Row - 1).Value = "Total Stock Volume"
+  
+ 'declare variables for calculations
+  Dim yearly_change As Double
+  Dim percent_change As Double
+  Dim count As Double
+  Dim open_price As Double
+  Dim close_price As Double
+
+  ' Loop through all stock data
+  For i = 2 To lastRow
+
+    ' Check if we are still within the same stock ticker
+    If Cells(i + 1, 1).Value <> Cells(i, 1).Value Then
+        
+      ' Set the stock ticker, open price, close price, yearly change, percent change, and total volume
+      stock_ticker = Cells(i, 1).Value
+      open_price = Cells(i - count, 3).Value
+      close_price = Cells(i, 6).Value
+      yearly_change = close_price - open_price
+      total_volume = total_volume + Cells(i, 7).Value
+        
+        'corrects any instances where open_price is 0 and cause percent_change to error
+        If open_price = 0 Then
+            percent_change = 0
+        Else
+            percent_change = yearly_change / open_price
+        End If
+
+      ' Print the ticker name
+      Range("I" & Summary_Table_Row).Value = stock_ticker
+      
+      ' prints the yearly change and percentage change. If statement to provide green or red format based on value
+      'and formating of percentage change
+      
+      If yearly_change > 0 Then
+         Range("J" & Summary_Table_Row).Value = yearly_change
+         Range("J" & Summary_Table_Row).Interior.ColorIndex = 4
+         Range("K" & Summary_Table_Row).Value = percent_change
+         Else
+         Range("J" & Summary_Table_Row).Value = yearly_change
+         Range("J" & Summary_Table_Row).Interior.ColorIndex = 3
+         Range("K" & Summary_Table_Row).Value = percent_change
+      End If
+          Range("K:K").NumberFormat = "0.00%"
+                 
+      ' Format Column K to Percentage and Column L to Number with no decimals
+      Range("L" & Summary_Table_Row).Value = total_volume
+      Range("L:L").NumberFormat = "0"
+      
+      ' Add one to the summary table row
+      Summary_Table_Row = Summary_Table_Row + 1
+      
+      ' Reset the total volume and count
+      total_volume = 0
+      count = 0
+      
+    ' If the cell immediately following a row is the same stock ticker
+        Else
+             If Cells(i, 3) > 0 Then
+                 count = count + 1
+                Else
+                count = 0
+            End If
+            
+      total_volume = total_volume + Cells(i, 7).Value
+
+    End If
+
+    Next i
+
+End Sub
